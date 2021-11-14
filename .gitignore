@@ -1,0 +1,9 @@
+volumes/file
+/config/root.key
+/config/vault.key
+/config/root.crt
+/config/vault.crt
+
+
+
+go
