@@ -17,7 +17,3 @@ services:
     cap_add:
       - IPC_LOCK
     entrypoint: vault server -config=/vault/config/vault.hcl
-
-
-    # entrypoint: vault server -config=/vault/config/vault.hcl
-# ENTRYPOINT [ "./test-entrypoint.sh" ]

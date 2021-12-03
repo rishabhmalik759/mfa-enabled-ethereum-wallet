@@ -12,6 +12,10 @@ RUN apk add --update alpine-sdk \
     && apk add linux-headers \
     && apk add go git openssl
 
+# Add required packages
+RUN apk add --no-cache --upgrade bash
+RUN apk add --no-cache jq httpie
+
 # Configure Go
 ENV GOROOT /usr/lib/go
 ENV GOPATH /go
@@ -23,30 +27,16 @@ RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin \
     && git clone https://github.com/immutability-io/vault-ethereum.git \
     && cd vault-ethereum \
     && go build \
-    # && ls -l \ 
-    # && ls $GOPATH/bin \
-    && cp vault-ethereum ../plugins/ \
-    && cd / && rm -r /vault/vault-ethereum \
+    && sleep 15 \
+    && pwd \
+    && cp vault-ethereum /vault/plugins \
+    && cd / \
+    && rm -r /vault/vault-ethereum \
     && export SHASUM256_eth=$(sha256sum "/vault/plugins/vault-ethereum" | cut -d' ' -f1) \
-    && echo $SHASUM256_eth 
+    && echo $SHASUM256_eth > /vault/SHASUM256_eth
 
-
-
-CMD /vault/initialize-vault.sh 
-
-
-
-
-# Configure Go
-# ENV GOROOT /usr/lib/go
-# ENV GOPATH /go
-# ENV PATH /go/bin:$PATH
-
-# RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin
-
-# # Install Glide
-# RUN go get -u github.com/Masterminds/glide/...
-
-# WORKDIR $GOPATH
-
-# CMD ["make"]
+# Save Shasum256 to file
+ENV SHASUM256_eth $(cat /vault/SHASUM256_eth)
+    
+RUN chmod +x /vault/initialize-vault.sh 
+ENV VAULT_ADDR=http://127.0.0.1:8200

@@ -1,50 +1,66 @@
+#!/bin/sh
 
-#!/bin/bash
+export VAULT_SKIP_VERIFY='true'
 
-# function initialize {
-#   export VAULT_ADDR=https://localhost:8200
-#   export VAULT_CACERT=/vault/config/root.crt
-#   export VAULT_INIT=$(vault operator init -format=json)
-#   if [[ $? -eq 2 ]] ; then
-#     echo "Vault initialization failed!"
-#     exit 2
-#   fi
-#   export VAULT_TOKEN=$(echo $VAULT_INIT | jq .root_token | tr -d '"')
-#   keybase encrypt $KEYBASE -m $VAULT_TOKEN -o ./"$KEYBASE"_VAULT_TOKEN.txt
-#   if [[ $? -eq 2 ]] ; then
-#     echo "Keybase encryption failed!"
-#     exit 2
-#   fi
-#   for (( COUNTER=0; COUNTER<5; COUNTER++ ))
-#   do
-#     key=$(echo $VAULT_INIT | jq '.unseal_keys_hex['"$COUNTER"']' | tr -d '"')
-#     vault operator unseal $key
-#     keybase encrypt $KEYBASE -m $key -o ./"$KEYBASE"_UNSEAL_"$COUNTER".txt
-#   done
-#   unset VAULT_INIT
-# }
+function initialize {
+  echo "Initializing server"
+  vault operator init -status
+  if [[ $? -eq 0 ]] ; then
+    echo "Vault already initialized"
+    exit 2
+  fi
 
-# function install_plugin {
-#   vault write sys/plugins/catalog/secret/ethereum-plugin \
-#         sha_256="$(cat SHA256SUM)" \
-#         command="vault-ethereum --ca-cert=./volumes/config/root.crt --client-cert=./volumes/config/vault.crt --client-key=./volumes/config/vault.key"
+  export VAULT_INIT=$(vault operator init -format=json)
+  if [[ $? -eq 2 ]] ; then
+    echo "Vault initialization failed!"
+    exit 2
+  fi
+  export VAULT_TOKEN=$(echo $VAULT_INIT | jq .root_token | tr -d '"')
+  echo $VAULT_TOKEN > /vault/VAULT_TOKEN.TXT
+  if [[ $? -eq 2 ]] ; then
+    echo "TOKEN SAVING FAILED!"
+    exit 2
+  fi
 
-#   vault write sys/plugins/catalog/secret/ethereum-plugin \
-#         sha_256="$(cat SHA256SUM)" \
-#         command="vault-ethereum --ca-cert=/vault/config/root.crt --client-cert=/vault/config/vault.crt --client-key=/vault/config/vault.key"
+  key=$(echo $VAULT_INIT | jq '.unseal_keys_hex['"0"']' | tr -d '"')
+  vault operator unseal $key
+  echo $key > /vault/UNSEAL_"0".txt
 
-#   if [[ $? -eq 2 ]] ; then
-#     echo "Vault Catalog update failed!"
-#     exit 2
-#   fi
+  key=$(echo $VAULT_INIT | jq '.unseal_keys_hex['"1"']' | tr -d '"')
+  vault operator unseal $key
+  echo $key > /vault/UNSEAL_"1".txt
 
-#   vault secrets enable -path=ethereum -plugin-name=ethereum-plugin plugin
-#   if [[ $? -eq 2 ]] ; then
-#     echo "Failed to mount Ethereum plugin!"
-#     exit 2
-#   fi
-#   rm SHA256SUM
-# }
+  key=$(echo $VAULT_INIT | jq '.unseal_keys_hex['"2"']' | tr -d '"')
+  vault operator unseal $key
+  echo $key > /vault/UNSEAL_"2".txt
+
+  key=$(echo $VAULT_INIT | jq '.unseal_keys_hex['"3"']' | tr -d '"')
+  vault operator unseal $key
+  echo $key > /vault/UNSEAL_"3".txt
+
+  key=$(echo $VAULT_INIT | jq '.unseal_keys_hex['"4"']' | tr -d '"')
+  vault operator unseal $key
+  echo $key > /vault/UNSEAL_"4".txt
+  unset VAULT_INIT
+}
+
+function install_plugin {
+  vault write sys/plugins/catalog/secret/ethereum-plugin \
+        sha_256="$(cat /vault/SHASUM256_eth)" \
+        command="vault-ethereum --ca-cert=/vault/config/root.crt --client-cert=/vault/config/vault.crt --client-key=/vault/config/vault.key"
+
+  if [[ $? -eq 2 ]] ; then
+    echo "Vault Catalog update failed!"
+    exit 2
+  fi
+
+  vault secrets enable -path=ethereum -plugin-name=ethereum-plugin plugin
+  if [[ $? -eq 2 ]] ; then
+    echo "Failed to mount Ethereum plugin!"
+    exit 2
+  fi
+  rm /vault/SHASUM256_eth
+}
 
 function gencerts {
 
@@ -98,6 +114,14 @@ EOF
   rm certindex.*
 }
 
-gencerts
-# # initialize
-# install_plugin
+gencerts > ./gencerts-log.txt
+
+echo "Generated certs"
+
+initialize > ./initialize-log.txt
+
+echo "Initialized Vault"
+
+install_plugin > ./install-plugin-log.txt
+
+echo "Installed ethereum plugin"
