@@ -4,10 +4,10 @@
 "backend" "file" {
   "path" = "/vault/file"
 }
-"api_addr" = "http://127.0.0.1:8200"
+"api_addr" = "http://0.0.0.0:8200"
 "ui" = "true"
 "listener" "tcp" {
-  "address" = "localhost:8200"
+  "address" = "0.0.0.0:8200"
   "tls_disable" = "1"
 }
 "plugin_directory" = "/vault/plugins"

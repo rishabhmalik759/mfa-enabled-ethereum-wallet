@@ -114,14 +114,31 @@ EOF
   rm certindex.*
 }
 
-gencerts > ./gencerts-log.txt
+# Preparing plugin to install
+cp /vault/vault-ethereum/vault-ethereum /vault/plugins/
 
+# Creating SHASUM256 for ethereum plugin
+SHASUM256_eth=$(sha256sum "/vault/plugins/vault-ethereum" | cut -d' ' -f1)
+
+# Copying SHA256 to a file
+echo $SHASUM256_eth > /vault/SHASUM256_eth
+
+# Generating openssl certs
+gencerts > /vault/logs/gencerts-log.txt
 echo "Generated certs"
 
-initialize > ./initialize-log.txt
-
+# Initializing Vault
+initialize > /vault/logs/initialize-log.txt
 echo "Initialized Vault"
 
-install_plugin > ./install-plugin-log.txt
-
+# Installing plugin
+install_plugin > /vault/logs/install-plugin-log.txt
 echo "Installed ethereum plugin"
+
+# Removing unwanted files and folders
+rm -r /vault/vault-ethereum
+
+
+# Create initial users
+chmod a+x /vault/create-initial-users.sh
+sh /vault/create-initial-users.sh
