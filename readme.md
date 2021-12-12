@@ -13,14 +13,9 @@ git clone https://github.com/rishabhmalik759/mfa-enabled-ethereum-wallet.git
 cd mfa-enabled-ethereum-wallet
 ```
 
-## Make create-docker.sh executable
-```
-chmod +x create-docker.sh
-```
-
 ## Run the installation
 ```
-./create-docker.sh
+docker-compose up
 ```
 
 ----
