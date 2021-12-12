@@ -3,7 +3,7 @@ volumes/file
 /config/vault.key
 /config/root.crt
 /config/vault.crt
-
+/.vscode
 
 
 go

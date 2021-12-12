@@ -21,22 +21,19 @@ ENV GOROOT /usr/lib/go
 ENV GOPATH /go
 ENV PATH /go/bin:$PATH
 
-# Download plugin
+# Download and build plugin
 RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin \
     && cd /vault \
     && git clone https://github.com/immutability-io/vault-ethereum.git \
     && cd vault-ethereum \
-    && go build \
-    && sleep 15 \
-    && pwd \
-    && cp vault-ethereum /vault/plugins \
-    && cd / \
-    && rm -r /vault/vault-ethereum \
-    && export SHASUM256_eth=$(sha256sum "/vault/plugins/vault-ethereum" | cut -d' ' -f1) \
-    && echo $SHASUM256_eth > /vault/SHASUM256_eth
-
-# Save Shasum256 to file
-ENV SHASUM256_eth $(cat /vault/SHASUM256_eth)
+    && go build
     
-RUN chmod +x /vault/initialize-vault.sh 
-ENV VAULT_ADDR=http://127.0.0.1:8200
+# RUN chmod +x /vault/initialize-vault.sh 
+RUN chmod a+x /vault/scripts/main/create-initial-users.sh
+RUN chmod a+x /vault/scripts/main/unseal-vault.sh
+RUN chmod a+x /vault/scripts/main/demo.sh
+
+
+ENV VAULT_ADDR https://127.0.0.1:9200 
+ENV VAULT_CACERT /vault/certs/root.crt
+EXPOSE 9200
