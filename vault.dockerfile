@@ -28,10 +28,12 @@ RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin \
     && cd vault-ethereum \
     && go build
     
-RUN chmod +x /vault/initialize-vault.sh 
-RUN chmod a+x /vault/create-initial-users.sh
-RUN chmod a+x /vault/unseal-vault.sh
+# RUN chmod +x /vault/initialize-vault.sh 
+RUN chmod a+x /vault/scripts/main/create-initial-users.sh
+RUN chmod a+x /vault/scripts/main/unseal-vault.sh
+RUN chmod a+x /vault/scripts/main/demo.sh
 
 
-ENV VAULT_ADDR=http://0.0.0.0:8200
-EXPOSE 8200
+ENV VAULT_ADDR https://127.0.0.1:9200 
+ENV VAULT_CACERT /vault/certs/root.crt
+EXPOSE 9200

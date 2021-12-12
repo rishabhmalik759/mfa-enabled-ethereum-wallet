@@ -1,19 +1,49 @@
 version: '2'
 services:
   vault:
+    networks:
+      - develop
+    links:
+      - "ganache"
     image: vault
     container_name: vault
     build:
       context: ./
       dockerfile: vault.dockerfile
     ports:
-      - "8200:8200"
+      - "9200:9200"
     restart: always
     volumes:
       - ./volumes/logs:/vault/logs
       - ./volumes/file:/vault/file
       - ./volumes/config:/vault/config
       - ./volumes/plugins:/vault/plugins
+      - ./volumes/certs:/vault/certs
+      - ./volumes/scripts:/vault/scripts
     cap_add:
       - IPC_LOCK
-    entrypoint: vault server -config=/vault/config/vault.hcl
+    entrypoint: /vault/config/entrypoint.sh
+    # entrypoint: vault server -config=/vault/config/vault.hcl
+  
+  ganache:
+    networks:
+      - develop
+    image: trufflesuite/ganache-cli:latest
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./ganache_data:/ganache_data
+    entrypoint:
+      - node
+      - /app/ganache-core.docker.cli.js
+      - --deterministic
+      - --db=/ganache_data
+      - --mnemonic
+      - "volcano story trust file before member board recycle always draw fiction when"
+      - --networkId
+      - "8545"
+      - --hostname
+      - "0.0.0.0"
+networks:
+  develop:
+    driver: bridge
